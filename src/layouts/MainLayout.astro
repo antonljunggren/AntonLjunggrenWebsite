@@ -1,0 +1,76 @@
+---
+import NavLinks from '../components/NavLinks.astro';
+import '../styles/global.css';
+
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+        <meta name="canonical" content="https://antonljunggren.se" />
+		<title>{Astro.props.title} - Anton Ljunggren</title>
+	</head>
+	<body>
+		<div class="flex flex-col min-h-screen justify-items-stretch">
+            <header>
+                <nav class=" px-9 py-4 fixed w-full z-[1000] bg-opacity-100 bg-primary">
+                    <!-- Desktop nav -->
+                    <div id="main-navbar" class="flex justify-between">
+                        <span class=" text-2xl">
+                          <img class=" h-8 w-auto pr-2 inline" src="./logo192.png" alt="Anton Ljunggren" />
+                          Anton Ljunggren
+                        </span>
+                        <span id="mobile-toggle" class="cursor-pointer mx-2 md:hidden flex items-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="w-6 h-6"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                            />
+                          </svg>
+                        </span>
+                        <span class="hidden md:block">
+                          <NavLinks/>
+                        </span>
+                    </div>
+                    <!-- Mobile nav -->
+                    <div id="mobile-nav" class="hidden">
+                        <div class="flex flex-col md:hidden pt-2 pb-1">
+                          <NavLinks/>
+                        </div>
+                    </div>
+                </nav>
+            </header>
+            <main class="m-4 flex-1 pt-16">
+                <slot/>
+            </main>
+            <footer class="bg-primary p-2 flex justify-center">
+                <div class="flex flex-col">
+                    <img class="object-contain max-h-10 w-auto" src="/logo192.png" alt="AL" />
+                    <p>&copy; {new Date().getFullYear()} - Anton Ljunggren</p>
+                </div>
+            </footer>
+        </div>
+	</body>
+</html>
+
+<script>
+
+    const navToggle = document.getElementById("mobile-toggle");
+    const mobileNav = document.getElementById("mobile-nav");
+
+    navToggle?.addEventListener("click", () => {
+        mobileNav?.classList.toggle("hidden");
+    });
+
+</script>

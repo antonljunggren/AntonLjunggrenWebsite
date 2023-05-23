@@ -1,0 +1,231 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import type Photo from "../models/Photo";
+
+const ENV = import.meta.env;
+
+const photosPerColumn = 3;
+const photoList = await fetch(ENV.API + "/photograph")
+  .then((resp) => resp.json())
+  .catch((err) => console.log("ERRORR"))
+  .then((data: Photo[]) => {
+    const splitPhotos: Photo[][] = [];
+
+    let photos: Photo[] = data;
+
+    let tmpCol: Photo[] = [];
+    let cnt = 0;
+
+    while (photos.length > 0) {
+      let photo: Photo = photos[0];
+      let pnt = photo.isLandscape ? 1 : 2;
+
+      if (photosPerColumn - (cnt + pnt) >= 0) {
+        //fits in column
+        tmpCol.push(photo);
+        cnt += pnt;
+        photos.shift();
+      } else if (photos.length == 1) {
+        //last one just add
+        tmpCol.push(photo);
+        photos = [];
+        splitPhotos.push(tmpCol);
+      } else if (cnt == photosPerColumn) {
+        //full column
+        splitPhotos.push(tmpCol);
+        tmpCol = [];
+        cnt = 0;
+      } else {
+        //does not fit, still room left, move photo back in array
+        photos.shift();
+        photos.push(photo);
+      }
+
+      if (photos.length <= 0) {
+        splitPhotos.push(tmpCol);
+        break;
+      }
+    }
+
+    /*for (let i = 0; i < data.length; i++) {
+      let photo: Photo = data[i];
+
+      if (photo.isLandscape) {
+      }
+
+      if (cnt >= photosPerColumn) {
+        splitPhotos.push(col);
+        cnt = 0;
+        col = [];
+      }
+    }
+
+    for (let i = 0; i < data.length; i += photosPerColumn) {
+      splitPhotos.push(data.slice(i, i + photosPerColumn));
+    }*/
+    return splitPhotos;
+  });
+---
+
+<MainLayout title='Photography'>
+  <div class='p-2 flex flex-col items-center'>
+    <h1 class='text-4xl'>Photography</h1>
+    <p class='text-lg mt-4 max-w-2xl'>
+      Here are some photographs I have taken, mainly using analog cameras, but some digital as well.
+      My main goal is just to get out more and do something different, less digital. I develop my
+      own negatives and scan them on my Plustek 8200i scanner and a Canonscan 8800f. Most photos are
+      artistically bad but I like them, they can best be described with this AI quote:
+    </p>
+    <p class='mt-4 text-lg italic'>
+      "I may not capture greatness in every frame, but these photographs are my humble expressions,
+      woven with the threads of my unique perspective." - chat GPT
+    </p>
+  </div>
+  <div class='flex items-center justify-center'>
+    <div class='mt-6 grid grid-cols-2 md:grid-cols-4 gap-4'>
+      {
+        photoList.map((col: Photo[]) => (
+          <div class='grid gap-4'>
+            {col.map((photo: Photo) => (
+              <div
+                class={`h-auto max-full cursor-pointer photo-thumbnail ${
+                  photo.isLandscape ? `row-span-1` : `row-span-2`
+                }
+                `}
+                data-photo={JSON.stringify(photo)}
+                data-api={ENV.API.toString()}
+              >
+                <img
+                  class='rounded-lg h-full'
+                  src={ENV.API + "/photograph/photo/" + photo.id + "/image/true"}
+                  alt={photo.title}
+                />
+                <div class='opacity-0 hover:opacity-100 transition-opacity relative -top-full w-full h-full bg-white bg-opacity-40 rounded-lg text-center'>
+                  <p class='absolute top-1/2 w-full text-center text-xl'>{photo.title}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+  <!-- HD image modal -->
+  <div id='photoModal' class='hidden fixed inset-0 z-[99999999999]'>
+    <div
+      id='photoModalBackground'
+      class='fixed inset-0 bg-gray-500 bg-opacity-50 transition-opacity'
+    >
+      <div class='flex min-h-full items-center justify-center p-4 text-center'>
+        <div
+          id='photoModalContent'
+          class='relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-100 text-left shadow-xl transition-all'
+        >
+          <!-- Exit btn -->
+          <div class='flex items-end justify-end'>
+            <div class='flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full'>
+              <button id='closePhotoModalBtn'>
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                  stroke-width='1.5'
+                  stroke='currentColor'
+                  class='w-6 h-6'
+                >
+                  <path stroke-linecap='round' stroke-linejoin='round' d='M6 18L18 6M6 6l12 12'
+                  ></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <!-- Photo info -->
+          <p id='photoModalTitle' class='text-center text-3xl'></p>
+          <div class='p-3'>
+            <img
+              id='photoModalImage'
+              class='max-h-[70vh]'
+              src=''
+              alt='HD version of selected image'
+            />
+          </div>
+          <div class='mt-2'>
+            <p id='photoModalDescription' class='text-center font-medium text-xl'></p>
+            <div class='my-3 mx-6 text-lg'>
+              <p>
+                <strong>Date:</strong>
+                <span id='photoModalDate'></span>
+              </p>
+              <p>
+                <strong>Location:</strong>
+                <span id='photoModalLocation'></span>
+              </p>
+              <p>
+                <strong>Camera/Film:</strong>
+                <span id='photoModalCameraFilm'></span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</MainLayout>
+
+<script>
+  import type Photo from "../models/Photo";
+  import { getShotLocationStringFormat } from "../models/Photo";
+
+  const photoModal = document.getElementById("photoModal");
+  const closePhotoModalBtn = document.getElementById("closePhotoModalBtn");
+  const photoModalBackgroud = document.getElementById("photoModalBackground");
+  const photoModalContent = document.getElementById("photoModalContent");
+
+  const thumbnails = Array.from(document.getElementsByClassName("photo-thumbnail"));
+
+  thumbnails.forEach((element) => {
+    const e = element as HTMLElement;
+    const photo: Photo = JSON.parse(e.dataset.photo ?? "");
+    const api = e.dataset.api ?? "";
+    element.addEventListener("click", () => {
+      selectPhoto(photo, api);
+      photoModal?.classList.toggle("hidden");
+    });
+  });
+
+  photoModalContent?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  photoModalBackgroud?.addEventListener("click", () => {
+    photoModal?.classList.toggle("hidden");
+  });
+
+  closePhotoModalBtn?.addEventListener("click", () => {
+    photoModal?.classList.toggle("hidden");
+  });
+
+  function selectPhoto(photo: Photo, api: string) {
+    const imageElement = document.getElementById("photoModalImage") as HTMLImageElement;
+    const titleElement = document.getElementById("photoModalTitle") as HTMLElement;
+    const descriptionElement = document.getElementById("photoModalDescription") as HTMLElement;
+    const dateElement = document.getElementById("photoModalDate") as HTMLElement;
+    const locationElement = document.getElementById("photoModalLocation") as HTMLElement;
+    const cameraFilmElement = document.getElementById("photoModalCameraFilm") as HTMLElement;
+
+    imageElement.src = "";
+
+    imageElement.src = api + "/photograph/photo/" + photo.id + "/image/false";
+
+    titleElement.innerText = photo.title;
+    descriptionElement.innerText = photo.description;
+    const dateTaken = new Date(photo.dateTaken);
+    dateElement.innerText = dateTaken.toLocaleDateString("se-SV", {
+      year: "numeric",
+      month: "2-digit",
+    });
+    locationElement.innerText = getShotLocationStringFormat(photo.location);
+    cameraFilmElement.innerText = photo.filmUsed;
+  }
+</script>
