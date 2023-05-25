@@ -15,6 +15,7 @@ export default class Photo {
   title: string;
   description: string;
   filmUsed: string;
+  cameraUsed: string;
   location: ShotLocation;
   dateTaken: Date;
   isLandscape: boolean;
@@ -24,6 +25,7 @@ export default class Photo {
     title: string,
     description: string,
     filmUsed: string,
+    cameraUsed: string,
     location: ShotLocation,
     dateTaken: Date,
     isLandscape: boolean
@@ -32,6 +34,7 @@ export default class Photo {
     this.title = title;
     this.description = description;
     this.filmUsed = filmUsed;
+    this.cameraUsed = cameraUsed;
     this.location = location;
     this.dateTaken = dateTaken;
     this.isLandscape = isLandscape;
@@ -40,26 +43,26 @@ export default class Photo {
 
 export function getShotLocationStringFormat(loc: ShotLocation | undefined | null): string {
   if (loc == null || loc == undefined) {
-    return "";
+    return '';
   }
 
   var res = new String();
 
-  if (loc.city != null && loc.city != "null") {
+  if (loc.city != null && loc.city != 'null') {
     res = res.concat(loc.city.toString());
   }
 
-  if (loc.province != null && loc.province != "null") {
-    res = res.concat(" (", loc.province.toString(), ")");
+  if (loc.province != null && loc.province != 'null') {
+    res = res.concat(' (', loc.province.toString(), ')');
   }
 
   if (
     loc.country != null &&
-    loc.country != "null" &&
-    ((loc.city != null && loc.city != "null") || (loc.province != null && loc.province != "null"))
+    loc.country != 'null' &&
+    ((loc.city != null && loc.city != 'null') || (loc.province != null && loc.province != 'null'))
   ) {
-    res = res.concat(", ", loc.country);
-  } else if (loc.country != null && loc.country != "null") {
+    res = res.concat(', ', loc.country);
+  } else if (loc.country != null && loc.country != 'null') {
     res = res.concat(loc.country);
   }
 

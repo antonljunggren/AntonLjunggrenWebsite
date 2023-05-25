@@ -10,6 +10,6 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "prettier.singleQuote": false,
-  "prettier.jsxSingleQuote": true,
+  "prettier.jsxSingleQuote": false,
   "prettier.printWidth": 100
 }
