@@ -1,3 +1,5 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow:
+
+Sitemap: https://antonljunggren.se/sitemap-index.xml
